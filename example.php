@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 use Andrewbo\Robinhood\Robinhood;
 
 $robinhood = new Robinhood('username', 'password');
