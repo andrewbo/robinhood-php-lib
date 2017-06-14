@@ -29,7 +29,7 @@ class Robinhood extends Api {
 		return $this->makeRequest(self::ENDPOINT_AUTH, [
 			'username' => (string) $username,
 			'password' => (string) $password,
-		]);
+			]);
 	}
 
 	/**
@@ -58,7 +58,19 @@ class Robinhood extends Api {
 	public function getAccount($account_url) {
 		return new Account(
 			$this->makeRequest($account_url)
-		);
+			);
+	}
+
+
+	/**
+	 * Executes a Robinhood API request by taking either the endpoint slug
+	 * or a fully constructed $uri.
+	 *
+	 * @param string $uri
+	 * @return array
+	 */
+	public function makeApiRequest($uri) {
+		return $this->makeRequest($uri);
 	}
 
 
