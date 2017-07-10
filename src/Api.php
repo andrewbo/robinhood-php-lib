@@ -158,7 +158,7 @@ abstract class Api {
 			return true;
 		}
 
-		return isset($guzzleData['results']) ? (array) $guzzleData['results'] : $guzzleData;
+		return $guzzleData;
 	}
 
 	/**
