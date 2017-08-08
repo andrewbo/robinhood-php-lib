@@ -29,8 +29,57 @@ class Robinhood extends Api {
 		return $this->makeRequest(self::ENDPOINT_AUTH, [
 			'username' => (string) $username,
 			'password' => (string) $password,
-		]);
+			]);
 	}
+
+
+	/**
+	 * Places an order in RH.
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	private function _placeOrder($args)
+	{
+		return $this->makeRequest(self::ENDPOINT_ORDERS, [
+			'account' 		=> (string) $args['account_url'],
+			'instrument' 	=> (string) $args['instrument_url'],
+			'price'			=> (float) $args['bid_price'],
+			'quantity'		=> (int) $args['quantity'],
+			'side'			=> (string) $args['transaction'],
+			'symbol'		=> (string) $args['symbol'],
+			'time_in_force'	=> (string) ( isset($args['time']) ? $args['time'] : 'gfd' ),
+			'trigger'		=> (string) ( isset($args['trigger']) ? $args['trigger'] : 'immediate' ),
+			'type'			=> (string) ( isset($args['type']) ? $args['type'] : 'market' )
+			]);
+	}
+
+
+	/**
+	 * Place a BUY order in RH.
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	public function placeBuyOrder($args)
+	{
+		$args['transaction'] = 'buy';
+		return $this->_placeOrder($args);
+	}
+
+
+	/**
+	 * Place a SELL order in RH.
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	public function placeSellOrder($args)
+	{
+		$args['transaction'] = 'sell';
+		return $this->_placeOrder($args);
+	}
+
 
 	/**
 	 * Return all User accounts
@@ -58,7 +107,19 @@ class Robinhood extends Api {
 	public function getAccount($account_url) {
 		return new Account(
 			$this->makeRequest($account_url)
-		);
+			);
+	}
+
+
+	/**
+	 * Executes a Robinhood API request by taking either the endpoint slug
+	 * or a fully constructed $uri.
+	 *
+	 * @param string $uri
+	 * @return array
+	 */
+	public function makeApiRequest($uri) {
+		return $this->makeRequest($uri);
 	}
 
 
