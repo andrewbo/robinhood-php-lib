@@ -112,10 +112,11 @@ abstract class Api {
 	/**
 	 * @param string $uri URI or ENDPOINT (see constants)
 	 * @param array $formParams
+	 * @param string $userAgent (okhttp/3.6.0 is the default in Android app)
 	 *
 	 * @return array|bool
 	 */
-	protected function makeRequest($uri, $formParams = []) {
+	protected function makeRequest( $uri, $formParams = [], $userAgent = 'okhttp/3.6.0' ) {
 
 		$uri = empty($this->getEndpointUriBySlug($uri)) ? $uri : $this->getEndpointUriBySlug($uri);
 
@@ -129,7 +130,10 @@ abstract class Api {
 		}
 
 		$requestData =  [
-		'headers' => [ 'Authorization' => 'Token ' . $this->token ],
+		'headers' => [ 
+		'Authorization' => 'Token ' . $this->token,
+		'User-Agent' => $userAgent
+		],
 		];
 
 		if ($isAuthRequest || $isPlaceOrderRequest) {
