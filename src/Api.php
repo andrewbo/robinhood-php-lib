@@ -149,17 +149,19 @@ abstract class Api {
 			}
 			
 		}
+		
 
 		try {
 			$guzzleResponse = $this->guzzleClient->request($requestMethod, $uri, $requestData);
 		} catch (ClientException $e) {
+			$guzzleResponse = $e->getResponse();
 			$this->addError($e->getMessage());
-			return false;
 		}
+
+
 
 		if ( !in_array( $guzzleResponse->getStatusCode(), self::RESPONSE_CODE_SUCCESS ) ) {
 			$this->addError('Failed to make a request to ' . $uri . '. ' . $this->getDetailedGuzzleErrorMessage($guzzleResponse));
-			return false;
 		}
 
 		$guzzleData = json_decode($guzzleResponse->getBody(), true);
