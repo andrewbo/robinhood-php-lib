@@ -11,35 +11,37 @@ abstract class Api {
 	const API_HOST = 'https://api.robinhood.com';
 
 	const ENDPOINTS = [
-		self::ENDPOINT_AUTH                  => '/api-token-auth/',
-		self::ENDPOINT_ACCOUNTS              => '/accounts/',
-		self::ENDPOINT_ACH_DEPOSIT_SCHEDULES => '/ach/deposit_schedules/',
-		self::ENDPOINT_ACH_IAV_AUTH          => '/ach/iav/auth/',
-		self::ENDPOINT_ACH_QUEUED_DEPOSIT    => '/ach/queued_deposit/',
-		self::ENDPOINT_ACH_RELATIONSHIPS     => '/ach/relationships/',
-		self::ENDPOINT_ACH_TRANSFERS         => '/ach/transfers/',
-		self::ENDPOINT_APPLICATIONS          => '/applications/',
-		self::ENDPOINT_DIVIDENDS             => '/dividends/',
-		self::ENDPOINT_DOCUMENT_REQUESTS     => '/upload/document_requests/',
-		self::ENDPOINT_EDOCUMENTS            => '/documents/',
-		self::ENDPOINT_ID_DOCUMENTS          => '/upload/photo_ids/',
-		self::ENDPOINT_INSTRUMENTS           => '/instruments/',
-		self::ENDPOINT_INVESTMENT_PROFILE    => '/user/investment_profile/',
-		self::ENDPOINT_MARGIN_UPGRADES       => '/margin/upgrades/',
-		self::ENDPOINT_MARKETS               => '/markets/',
-		self::ENDPOINT_NOTIFICATION_SETTINGS => '/settings/notifications/',
-		self::ENDPOINT_NOTIFICATIONS         => '/notifications/',
-		self::ENDPOINT_ORDERS                => '/orders/',
-		self::ENDPOINT_PASSWORD_CHANGE       => '/password_change/',
-		self::ENDPOINT_PASSWORD_RESET        => '/password_reset/request/',
-		self::ENDPOINT_PORTFOLIOS            => '/portfolios/',
-		self::ENDPOINT_POSITIONS             => '/positions/',
-		self::ENDPOINT_QUOTES                => '/quotes/',
-		self::ENDPOINT_SUBSCRIPTIONS         => '/subscription/subscriptions/',
-		self::ENDPOINT_USER                  => '/user/',
-		self::ENDPOINT_WATCHLISTS            => '/watchlists/',
-		self::ENDPOINT_WIRE_RELATIONSHIPS    => '/wire/relationships/',
-		self::ENDPOINT_WIRE_TRANSFERS        => '/wire/transfers/',
+	self::ENDPOINT_AUTH                  => '/api-token-auth/',
+	self::ENDPOINT_ACCOUNTS              => '/accounts/',
+	self::ENDPOINT_ACH_DEPOSIT_SCHEDULES => '/ach/deposit_schedules/',
+	self::ENDPOINT_ACH_IAV_AUTH          => '/ach/iav/auth/',
+	self::ENDPOINT_ACH_QUEUED_DEPOSIT    => '/ach/queued_deposit/',
+	self::ENDPOINT_ACH_RELATIONSHIPS     => '/ach/relationships/',
+	self::ENDPOINT_ACH_TRANSFERS         => '/ach/transfers/',
+	self::ENDPOINT_APPLICATIONS          => '/applications/',
+	self::ENDPOINT_DIVIDENDS             => '/dividends/',
+	self::ENDPOINT_DOCUMENT_REQUESTS     => '/upload/document_requests/',
+	self::ENDPOINT_EDOCUMENTS            => '/documents/',
+	self::ENDPOINT_ID_DOCUMENTS          => '/upload/photo_ids/',
+	self::ENDPOINT_INSTRUMENTS           => '/instruments/',
+	self::ENDPOINT_INVESTMENT_PROFILE    => '/user/investment_profile/',
+	self::ENDPOINT_MARGIN_UPGRADES       => '/margin/upgrades/',
+	self::ENDPOINT_MARKETS               => '/markets/',
+	self::ENDPOINT_NOTIFICATION_SETTINGS => '/settings/notifications/',
+	self::ENDPOINT_NOTIFICATIONS         => '/notifications/',
+	self::ENDPOINT_ORDERS                => '/orders/',
+	self::ENDPOINT_PASSWORD_CHANGE       => '/password_change/',
+	self::ENDPOINT_PASSWORD_RESET        => '/password_reset/request/',
+	self::ENDPOINT_PORTFOLIOS            => '/portfolios/',
+	self::ENDPOINT_POSITIONS             => '/positions/',
+	self::ENDPOINT_QUOTES                => '/quotes/',
+	self::ENDPOINT_SUBSCRIPTIONS         => '/subscription/subscriptions/',
+	self::ENDPOINT_USER                  => '/user/',
+	self::ENDPOINT_WATCHLISTS            => '/watchlists/',
+	self::ENDPOINT_WIRE_RELATIONSHIPS    => '/wire/relationships/',
+	self::ENDPOINT_WIRE_TRANSFERS        => '/wire/transfers/',
+	self::ENDPOINT_FUNDAMENTALS          => '/fundamentals/',
+	self::ENDPOINT_QUOTES_HISTORICALS    => '/quotes/historicals/',
 	];
 
 	const ENDPOINT_AUTH = 'login';
@@ -71,6 +73,8 @@ abstract class Api {
 	const ENDPOINT_WATCHLISTS = 'watchlists';
 	const ENDPOINT_WIRE_RELATIONSHIPS = 'wire_relationships';
 	const ENDPOINT_WIRE_TRANSFERS = 'wire_transfers';
+	const ENDPOINT_FUNDAMENTALS = 'fundamentals';
+	const ENDPOINT_QUOTES_HISTORICALS = 'quotes/historicals';
 
 	const AUTH_PARAM_USERNAME = 'username';
 	const AUTH_PARAM_PASSWORD = 'password';
@@ -78,7 +82,10 @@ abstract class Api {
 	const REQUEST_METHOD_POST = 'POST';
 	const REQUEST_METHOD_GET  = 'GET';
 
-	const RESPONSE_CODE_SUCCESS = 200;
+	const RESPONSE_CODE_SUCCESS = [
+	200,
+	201
+	];
 
 
 
@@ -109,15 +116,17 @@ abstract class Api {
 	/**
 	 * @param string $uri URI or ENDPOINT (see constants)
 	 * @param array $formParams
+	 * @param string $userAgent (okhttp/3.6.0 is the default in Android app)
 	 *
 	 * @return array|bool
 	 */
-	protected function makeRequest($uri, $formParams = []) {
+	protected function makeRequest( $uri, $formParams = [], $userAgent = 'okhttp/3.6.0' ) {
 
 		$uri = empty($this->getEndpointUriBySlug($uri)) ? $uri : $this->getEndpointUriBySlug($uri);
 
-		$requestMethod = self::REQUEST_METHOD_GET;
-		$isAuthRequest = isset($formParams[self::AUTH_PARAM_USERNAME], $formParams[self::AUTH_PARAM_PASSWORD]);
+		$requestMethod 			= self::REQUEST_METHOD_GET;
+		$isAuthRequest 			= isset($formParams[self::AUTH_PARAM_USERNAME], $formParams[self::AUTH_PARAM_PASSWORD]);
+		$isPlaceOrderRequest	= isset($formParams['side']);
 
 		if ( ! $isAuthRequest && empty($this->token)) {
 			$this->addError('Can\'t work with API without token. Log in first.');
@@ -125,26 +134,38 @@ abstract class Api {
 		}
 
 		$requestData =  [
-			'headers' => [ 'Authorization' => 'Token ' . $this->token ],
+		'headers' => [ 
+		'Authorization' => 'Token ' . $this->token,
+		'User-Agent' => $userAgent
+		],
 		];
 
-		if ($isAuthRequest) {
+		if ($isAuthRequest || $isPlaceOrderRequest) {
 			$requestMethod = self::REQUEST_METHOD_POST;
-			$requestData =  [
+			if ($isPlaceOrderRequest) {
+				$requestData +=  [
 				'form_params' => $formParams,
-			];
+				];
+			} else {
+				$requestData =  [
+				'form_params' => $formParams,
+				];
+			}
+			
 		}
+		
 
 		try {
 			$guzzleResponse = $this->guzzleClient->request($requestMethod, $uri, $requestData);
 		} catch (ClientException $e) {
+			$guzzleResponse = $e->getResponse();
 			$this->addError($e->getMessage());
-			return false;
 		}
 
-		if (self::RESPONSE_CODE_SUCCESS !== $guzzleResponse->getStatusCode()) {
+
+
+		if ( !in_array( $guzzleResponse->getStatusCode(), self::RESPONSE_CODE_SUCCESS ) ) {
 			$this->addError('Failed to make a request to ' . $uri . '. ' . $this->getDetailedGuzzleErrorMessage($guzzleResponse));
-			return false;
 		}
 
 		$guzzleData = json_decode($guzzleResponse->getBody(), true);
@@ -158,7 +179,7 @@ abstract class Api {
 			return true;
 		}
 
-		return isset($guzzleData['results']) ? (array) $guzzleData['results'] : $guzzleData;
+		return $guzzleData;
 	}
 
 	/**
