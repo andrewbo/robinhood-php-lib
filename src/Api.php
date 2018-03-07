@@ -40,6 +40,8 @@ abstract class Api {
 	self::ENDPOINT_WATCHLISTS            => '/watchlists/',
 	self::ENDPOINT_WIRE_RELATIONSHIPS    => '/wire/relationships/',
 	self::ENDPOINT_WIRE_TRANSFERS        => '/wire/transfers/',
+	self::ENDPOINT_FUNDAMENTALS          => '/fundamentals/',
+	self::ENDPOINT_QUOTES_HISTORICALS    => '/quotes/historicals/',
 	];
 
 	const ENDPOINT_AUTH = 'login';
@@ -71,6 +73,8 @@ abstract class Api {
 	const ENDPOINT_WATCHLISTS = 'watchlists';
 	const ENDPOINT_WIRE_RELATIONSHIPS = 'wire_relationships';
 	const ENDPOINT_WIRE_TRANSFERS = 'wire_transfers';
+	const ENDPOINT_FUNDAMENTALS = 'fundamentals';
+	const ENDPOINT_QUOTES_HISTORICALS = 'quotes/historicals';
 
 	const AUTH_PARAM_USERNAME = 'username';
 	const AUTH_PARAM_PASSWORD = 'password';
